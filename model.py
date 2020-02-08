@@ -34,7 +34,7 @@ class Projects(db.Model):
     name = db.Column(db.String(80), nullable=False, unique=True)
     description = db.Column(db.Text(80), nullable=False)
     completed = db.Column(db.Boolean(), nullable=True)
-    user_stories = db.Column(db.Text(80), nullable=False)
+    user_stories = db.Column(db.Text(80), nullable=True)
 
     def __repr__(self):
         return '<Projects %r>' % self.name
