@@ -21,6 +21,11 @@ parser.add_argument('user_story')
 parser.add_argument('description')
 parser.add_argument('note')
 
+# welcome
+class Welcome(Resource):
+    def get(self):
+        return jsonify({"greetings": "Welcome", "status_code": 200})
+
 # create new user
 class Create_user(Resource):
     def post(self):
@@ -40,7 +45,7 @@ class Create_user(Resource):
         user = Users(name=new_user, password = generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
-        return {"message": "{} registered successfully".format(new_user)}, 201
+        return jsonify({"message": "{} registered successfully".format(new_user), 'status_code': "200"})
 ''' 
 validates user's name and password
 if successful returns a token
@@ -62,7 +67,7 @@ class Auth(Resource):
         if not check_password_hash(user.password, password):
             abort(404, message ="username or password incorrect")
         token = generate_confirmation_token(user.name)
-        return {'token':"{}".format(token)}, 200
+        return jsonify({'token':"{}".format(token), 'status_code': 200})
 
 # class for projects
 class Project(Resource):
@@ -84,14 +89,21 @@ class Project(Resource):
         project = Projects(name=project_name, description= project_description)
         db.session.add(project)
         db.session.commit()
-        return {'message':"{} added successfully".format(project_name)}, 201
+        return jsonify({'message':"{} added successfully".format(project_name), 'status_code': '201'})
     
     # Retrieve all projects
     def get(self):
-        project = Projects.query.all()
+        args = parser.parse_args()
+        search_word = args['search']
+        # if search word is provided
+        if search_word:
+            search = "%{}%".format(search_word)
+            project = Projects.query.filter(Post.name.like(search)).all()
+        else:
+            project = Projects.query.all()
         ProjectSchema= Projects_schema(many=True)
         output = ProjectSchema.dump(project)  
-        return {'Projects': output}, 200
+        return jsonify({'Projects': output, 'status_code':'200'})
 
 
 # perform create, read, update and delete on existing projects
@@ -102,7 +114,7 @@ class Project_crud(Resource):
         project = Projects.query.filter_by(id=project_id).first()
         ProjectSchema= Projects_schema()
         output = ProjectSchema.dump(project)  
-        return {'Project':output}, 200
+        return jsonify({'Project':output, 'status_code': 200})
 
     # update an existing project
     def put(self, project_id):
@@ -121,7 +133,7 @@ class Project_crud(Resource):
                 project.description = project_description
         db.session.add(project)
         db.session.commit()
-        return  {'message':'changes made successfully'}, 201
+        return  jsonify({'message':'changes made successfully', 'status_code': '201'})
 
 
     #update the completed property of project with given project_id
@@ -137,7 +149,7 @@ class Project_crud(Resource):
             project.user_stories = user_story
         db.session.add(project)
         db.session.commit()
-        return {'message': 'changes made successfully'}, 201
+        return jsonify({'message': 'changes made successfully', 'status_code':'201'})
 
 
 
@@ -146,7 +158,7 @@ class Project_crud(Resource):
         abort_if_project_doesnt_exist(project_id)
         Projects.query.filter_by(id=project_id).delete()
         db.session.commit()
-        return {'message': 'project deleted successfully'}, 201
+        return jsonify({'message': 'project deleted successfully', 'status_code': '201'})
 
 
 # Create a new action under an existing project
@@ -165,13 +177,13 @@ class Action(Resource):
         action = Actions(projects_id = project_id, description=action_description, note = action_note)
         db.session.add(action)
         db.session.commit()
-        return {'message':" Action added successfully"}, 201
+        return jsonify({'message':" Action added successfully", 'status_code':'201'}) 
     
     def get(self, project_id):
         action = Actions.query.filter_by(projects_id=project_id)
         ActionSchema= Actions_schema(many=True)
         output = ActionSchema.dump(action)  
-        return {'Actions':output}, 200
+        return jsonify({'Actions':output, 'status_code': '200'})
 
 
 # Retrieve all the actions
@@ -180,7 +192,7 @@ class All_actions(Resource):
         all_actions = Actions.query.all()
         ActionSchema= Actions_schema(many=True)
         output = ActionSchema.dump(all_actions)  
-        return {'Actions':output}, 200
+        return jsonify({'Actions':output, 'status_code': '200'})
 
 # Retrieves a single action by id
 class Single_action(Resource):
@@ -190,7 +202,7 @@ class Single_action(Resource):
             abort(404, message="Action {} doesn't exist".format(action_id))
         ActionSchema= Actions_schema()
         output = ActionSchema.dump(actions)  
-        return {'Actions':output}, 200
+        return jsonify({'Actions':output, 'status_code': '200'})
 
 #Perform CRUD  on Actions given project_id and action_id
 class Action_crud(Resource):
@@ -201,7 +213,7 @@ class Action_crud(Resource):
         action = Actions.query.filter_by(projects_id=project_id)
         ActionSchema= Actions_schema(many=True)
         output = ActionSchema.dump(action)  
-        return {'Actions':output}, 200
+        return jsonify({'Actions':output, 'status_code': '200'})
 
     # update a given action for a particular project
     def put(self, project_id, action_id):
@@ -221,16 +233,16 @@ class Action_crud(Resource):
                 action.note = action_note
         db.session.add(action)
         db.session.commit()
-        return {'message': 'changes made successfully'}, 201
+        return jsonify({'message': 'changes made successfully', 'status_code': '201'})
 
     def delete(self, project_id, action_id):
         abort_if_project_doesnt_exist(project_id)
         abort_if_action_doesnt_exist(action_id)
         action = Actions.query.filter_by(id = action_id).delete()
         db.session.commit()
-        return {'message': 'Action deleted successfully'}, 201
+        return jsonify({'message': 'Action deleted successfully', 'status_code':'201'})
 
-
+api.add_resource(Welcome,'/')
 api.add_resource(Create_user,'/users/register')
 api.add_resource(Auth,'/users/auth')
 api.add_resource(Project_crud, '/projects/<project_id>')
