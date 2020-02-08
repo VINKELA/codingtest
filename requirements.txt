@@ -2,7 +2,6 @@ requests
 PyMySQL
 flask-rest-paginate
 Flask==1.0.2
-Flask-Mail==0.9.1
 flask-marshmallow==0.10.1
 Flask-RESTful==0.3.7
 Flask-Session==0.3.1
