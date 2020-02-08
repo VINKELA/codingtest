@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from flask_rest_paginate import Pagination
+
+
 app = Flask(__name__)
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -15,8 +18,7 @@ Base = declarative_base()
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-
-
+pagination = Pagination(app, db)
 
 # table for Users
 class Users(db.Model):
@@ -63,10 +65,7 @@ class Projects_schema(ma.ModelSchema):
         fields = ("id", "name", "description", "note", "user_stories")
         Model = Projects 
 
-
 class Actions_schema(ma.ModelSchema):
     class Meta:
         fields = ("id", "project_id","description","note")
         Model = Actions 
-
-

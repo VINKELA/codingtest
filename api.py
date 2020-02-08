@@ -1,6 +1,7 @@
+import os
 from flask import Flask,session
-from functions import generate_confirmation_token, abort_if_project_doesnt_exist, abort_if_action_doesnt_exist
-from model import app, db, Users, Projects, Actions, Users_schema, Projects_schema, Actions_schema
+from functions import generate_confirmation_token, abort_if_project_doesnt_exist, abort_if_action_doesnt_exist, allowed_file
+from model import app, db, Users, Projects, Actions, Users_schema, Projects_schema, Actions_schema, pagination
 from flask import jsonify
 from flask import Flask, flash, redirect, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -11,6 +12,11 @@ from sqlalchemy import and_
 
 api = Api(app)
 
+UPLOAD_FOLDER = '/upload'
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 parser = reqparse.RequestParser()
 parser.add_argument('username')
 parser.add_argument('password')
@@ -19,7 +25,9 @@ parser.add_argument('project_description')
 parser.add_argument('project_id')
 parser.add_argument('user_story')
 parser.add_argument('description')
-parser.add_argument('note')
+parser.add_argument('search')
+parser.add_argument('limit')
+parser.add_argument('offset')
 
 # welcome
 class Welcome(Resource):
@@ -95,10 +103,17 @@ class Project(Resource):
     def get(self):
         args = parser.parse_args()
         search_word = args['search']
+        offset = args['offset']
+        limit = args['limit']
         # if search word is provided
         if search_word:
             search = "%{}%".format(search_word)
-            project = Projects.query.filter(Post.name.like(search)).all()
+            project = Projects.query.filter(Projects.name.like(search)).all()
+        # set pagination 
+        elif limit and offset:
+            app.config['PAGINATE_PAGE_SIZE'] = limit
+            app.config['PAGINATE_PAGE_PARAM'] = offset
+            project = pagination.paginate(Projects, Projects_schema)
         else:
             project = Projects.query.all()
         ProjectSchema= Projects_schema(many=True)
@@ -242,6 +257,29 @@ class Action_crud(Resource):
         db.session.commit()
         return jsonify({'message': 'Action deleted successfully', 'status_code':'201'})
 
+
+        
+#upload user stories files to server and save location to string to database
+class Upload_files(Resource):
+    def put(self, project_id):
+        if 'file' not in request.files:
+            abort(404, message="No file part in the request")
+        file = request.files['file']
+        if file.filename == '':
+            abort(404, message="No file selected for uploading")
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            project = Projects.query.filter_by(id=project_id).first()
+            project.user_stories = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            db.session.add(project)
+            db.session.commit()
+            return jsonify({'message':'file successfully uploaded!', 'status_code':'201'})
+        else:
+            abort(400, message="file type not allowed")
+
+
+
 api.add_resource(Welcome,'/')
 api.add_resource(Create_user,'/users/register')
 api.add_resource(Auth,'/users/auth')
@@ -251,7 +289,7 @@ api.add_resource(All_actions, '/actions')
 api.add_resource(Single_action, '/actions/<action_id>')
 api.add_resource(Action, '/projects/<project_id>/actions')
 api.add_resource(Action_crud, '/projects/<project_id>/actions/<action_id>')
-
+api.add_resource(Upload_files, '/projects/<project_id>/upload')
 
 if __name__ == '__main__':
     app.run(debug=True)
