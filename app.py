@@ -11,10 +11,12 @@ from sqlalchemy import and_
 
 
 api = Api(app)
-
+# file folder
 UPLOAD_FOLDER = '/upload'
-
+# configure upload folder
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# maximum file size
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # for selecting arguments
@@ -30,7 +32,7 @@ parser.add_argument('search')
 parser.add_argument('limit')
 parser.add_argument('offset')
 
-
+#fields
 project_fields = {
     'name': fields.String,
     'description': fields.String,
@@ -39,10 +41,10 @@ project_fields = {
     'user_stories': fields.String
 }
 
-# welcome
+# welcome page
 class Welcome(Resource):
     def get(self):
-        return jsonify({"greetings": "Welcome", "status_code": 200})
+        return jsonify({"greetings": "Welcome","program":"VGGvirtualinternship", "project":"coding test", "submitted_by":"kelvin orji", "full_name":"orji kalu kelvin", "email":"orjikalukelvin@gmail.com","track":"python", "status_code": 200})
 
 # create new user
 class Create_user(Resource):
@@ -175,7 +177,7 @@ class Project_crud(Resource):
         db.session.add(project)
         db.session.commit()
         return jsonify({'message': 'changes made successfully', 'status_code':'201'})
-
+    # delete project with given id 
     def delete(self, project_id):
         abort_if_project_doesnt_exist(project_id)
         Projects.query.filter_by(id=project_id).delete()
@@ -230,7 +232,7 @@ class Action_crud(Resource):
     # Retrieve a single action by id
     def get(self, project_id, action_id):
         abort_if_project_doesnt_exist(project_id)
-        abort_if_action_doesnt_exist
+        abort_if_action_doesnt_exist(action_id)
         action = Actions.query.filter(and_(Actions.projects_id==project_id, Actions.id == action_id))
         ActionSchema= Actions_schema(many=True)
         output = ActionSchema.dump(action)  
@@ -255,7 +257,8 @@ class Action_crud(Resource):
         db.session.add(action)
         db.session.commit()
         return jsonify({'message': 'changes made successfully', 'status_code': '201'})
-
+    
+    # Delete action with project id and action id
     def delete(self, project_id, action_id):
         abort_if_project_doesnt_exist(project_id)
         abort_if_action_doesnt_exist(action_id)
@@ -284,6 +287,7 @@ class Upload_files(Resource):
         else:
             abort(400, message="file type not allowed")
 
+# Endpoints
 api.add_resource(Welcome,'/')
 api.add_resource(Create_user,'/users/register')
 api.add_resource(Auth,'/users/auth')

@@ -17,7 +17,7 @@ Version control: Git and Github
 ## Heroku Link
 https://vggcodingtest.herokuapp.com/
 
-## Git Link
+## Git Link.
 https://github.com/VINKELA/codingtest.git
 
 ## Endpoints
