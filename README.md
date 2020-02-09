@@ -1,6 +1,6 @@
 # My submission for VGGvirtualinternship coding test
 Email: Orjikalukelvin@gmail.com
-username: vinkela
+username: Kelvin Orji
 Name: Orji kalu kalu
 #python 
 
