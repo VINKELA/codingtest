@@ -17,9 +17,9 @@ def abort_if_project_doesnt_exist(project_id):
         abort(404, message="Project with id = {} doesn't exist".format(project_id))
 
 def abort_if_action_doesnt_exist(action_id):
-    actions = Projects.query.filter_by(id=action_id).first()
+    actions = Actions.query.filter_by(id=action_id).first()
     if  not actions:
-        abort(404, message="Action {} doesn't exist".format(action_id))
-
+        abort(404, message="Action with id {} doesn't exist".format(action_id))
+# allowed files
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

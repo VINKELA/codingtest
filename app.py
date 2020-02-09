@@ -17,17 +17,27 @@ UPLOAD_FOLDER = '/upload'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+# for selecting arguments
 parser = reqparse.RequestParser()
-parser.add_argument('username')
 parser.add_argument('password')
-parser.add_argument('project_name')
-parser.add_argument('project_description')
-parser.add_argument('project_id')
-parser.add_argument('user_story')
+parser.add_argument('name')
 parser.add_argument('description')
+parser.add_argument('id')
+parser.add_argument('completed')
+parser.add_argument('user_stories')
+parser.add_argument('note')
 parser.add_argument('search')
 parser.add_argument('limit')
 parser.add_argument('offset')
+
+
+project_fields = {
+    'name': fields.String,
+    'description': fields.String,
+    'id': fields.Integer,
+    'completed': fields.Boolean,
+    'user_stories': fields.String
+}
 
 # welcome
 class Welcome(Resource):
@@ -38,7 +48,7 @@ class Welcome(Resource):
 class Create_user(Resource):
     def post(self):
         args = parser.parse_args()
-        username = args['username']
+        username = args['name']
         password = args['password']
         if not  username:
             abort(404, message="please choose a username")
@@ -62,7 +72,7 @@ else return error
 class Auth(Resource):
     def post(self):
         args = parser.parse_args()
-        username = args['username']
+        username = args['name']
         password = args['password']
         if not username:
             abort(404, message="please provide your username")
@@ -82,8 +92,8 @@ class Project(Resource):
     # create a new project
     def post(self):
         args = parser.parse_args()
-        project_name = args['project_name']
-        project_description = args['project_description']
+        project_name = args['name']
+        project_description = args['description']
         if not project_name:
             abort(404, message="please choose a name for your project")
         project_name = project_name.lower()
@@ -92,8 +102,6 @@ class Project(Resource):
             abort(404, message="{} already exist. please choose another name for your project".format(project_name))
         if not project_description:
             abort(404, message = "please describe your project")
-        if len(project_description) < 10:
-            abort(404, message = "please describe your project with more words")    
         project = Projects(name=project_name, description= project_description)
         db.session.add(project)
         db.session.commit()
@@ -113,7 +121,7 @@ class Project(Resource):
         elif limit and offset:
             app.config['PAGINATE_PAGE_SIZE'] = limit
             app.config['PAGINATE_PAGE_PARAM'] = offset
-            project = pagination.paginate(Projects, Projects_schema)
+            return pagination.paginate(Projects, project_fields)
         else:
             project = Projects.query.all()
         ProjectSchema= Projects_schema(many=True)
@@ -135,12 +143,15 @@ class Project_crud(Resource):
     def put(self, project_id):
         abort_if_project_doesnt_exist(project_id)
         args = parser.parse_args()
-        project_name = args['project_name']
-        project_description = args['project_description']
+        project_name = args['name']
+        project_description = args['description']
         if not project_name and not project_description: 
             abort(404, message="No changes specified")
         project = Projects.query.filter_by(id=project_id).first()
         if project_name:
+            name_check = Projects.query.filter_by(name=project_name).first()
+            if name_check:
+                abort(404, message="name {} already exist".format(project_name))
             if project.name != project_name:
                 project.name = project_name
         if project_description:
@@ -155,19 +166,15 @@ class Project_crud(Resource):
     def patch(self, project_id):
         abort_if_project_doesnt_exist(project_id)
         args = parser.parse_args()
-        user_story = args['user_story']
-        if not user_story:
-            abort(404, message="No changes made")
+        completed = args['completed']
         project = Projects.query.filter_by(id=project_id).first()
-
-        if user_story != project.user_stories:
-            project.user_stories = user_story
+        if not completed:
+            project.completed =  False
+        else:
+            project.completed = True
         db.session.add(project)
         db.session.commit()
         return jsonify({'message': 'changes made successfully', 'status_code':'201'})
-
-
-
 
     def delete(self, project_id):
         abort_if_project_doesnt_exist(project_id)
@@ -178,22 +185,21 @@ class Project_crud(Resource):
 
 # Create a new action under an existing project
 class Action(Resource):
+    # create new action with project id
     def post(self, project_id):
+        abort_if_project_doesnt_exist(project_id)
         args = parser.parse_args()
         action_description = args['description']
         action_note = args['note']
         if not action_description:
             abort(404, message = "please describe your action")
         if not action_note:
-            abort(404, message = "please describe your action")
-
-        if len(action_description) < 10:
-            abort(404, message = "please describe your action with more words")    
+            abort(404, message = "please give some notes on action")
         action = Actions(projects_id = project_id, description=action_description, note = action_note)
         db.session.add(action)
         db.session.commit()
         return jsonify({'message':" Action added successfully", 'status_code':'201'}) 
-    
+    # get all actions with given project id
     def get(self, project_id):
         action = Actions.query.filter_by(projects_id=project_id)
         ActionSchema= Actions_schema(many=True)
@@ -212,7 +218,7 @@ class All_actions(Resource):
 # Retrieves a single action by id
 class Single_action(Resource):
     def get(self, action_id):
-        actions = Projects.query.filter_by(id=action_id).first()
+        actions = Actions.query.filter_by(id=action_id).first()
         if  not actions:
             abort(404, message="Action {} doesn't exist".format(action_id))
         ActionSchema= Actions_schema()
@@ -225,7 +231,7 @@ class Action_crud(Resource):
     def get(self, project_id, action_id):
         abort_if_project_doesnt_exist(project_id)
         abort_if_action_doesnt_exist
-        action = Actions.query.filter_by(projects_id=project_id)
+        action = Actions.query.filter(and_(Actions.projects_id==project_id, Actions.id == action_id))
         ActionSchema= Actions_schema(many=True)
         output = ActionSchema.dump(action)  
         return jsonify({'Actions':output, 'status_code': '200'})
@@ -239,12 +245,12 @@ class Action_crud(Resource):
         action_note = args['note']
         if not action_note and not action_description:
             abort(404, message="No changes made")
-        action = Actions.query.filter_by(id=action_id).first()
+        action = Actions.query.filter(and_(Actions.projects_id==project_id, Actions.id == action_id)).first()
         if action_description:
             if action.description != action_description:
                 action.description = action_description
         if action_note:
-            if action.note != action_note:
+            if action_note != action.note:
                 action.note = action_note
         db.session.add(action)
         db.session.commit()
@@ -253,7 +259,7 @@ class Action_crud(Resource):
     def delete(self, project_id, action_id):
         abort_if_project_doesnt_exist(project_id)
         abort_if_action_doesnt_exist(action_id)
-        action = Actions.query.filter_by(id = action_id).delete()
+        action = Actions.query.filter(and_(Actions.projects_id==project_id, Actions.id == action_id)).delete()
         db.session.commit()
         return jsonify({'message': 'Action deleted successfully', 'status_code':'201'})
 
@@ -277,8 +283,6 @@ class Upload_files(Resource):
             return jsonify({'message':'file successfully uploaded!', 'status_code':'201'})
         else:
             abort(400, message="file type not allowed")
-
-
 
 api.add_resource(Welcome,'/')
 api.add_resource(Create_user,'/users/register')

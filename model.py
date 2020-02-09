@@ -62,7 +62,7 @@ class Users_schema(ma.ModelSchema):
 
 class Projects_schema(ma.ModelSchema):
     class Meta:
-        fields = ("id", "name", "description", "note", "user_stories")
+        fields = ("id", "name", "description", "completed", "user_stories")
         Model = Projects 
 
 class Actions_schema(ma.ModelSchema):
