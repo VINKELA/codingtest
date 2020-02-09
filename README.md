@@ -42,7 +42,7 @@ https://vggcodingtest.herokuapp.com/projects/<project_id>/actions/<action_id>
 https://vggcodingtest.herokuapp.com/projects/<project_id>/actions/<action_id>
 
 
-https://vggcodingtest.herokuapp.com/?search=<word>
+https://vggcodingtest.herokuapp.com/projects?search=<word>
 
 https://vggcodingtest.herokuapp.com/projects?offset=<offsetValue>&limit=<limitValue>e.g. api/projects?offset=10&limit=10
 
