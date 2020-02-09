@@ -12,7 +12,7 @@ from sqlalchemy import and_
 
 api = Api(app)
 # file folder
-UPLOAD_FOLDER = '/upload'
+UPLOAD_FOLDER = 'upload'
 # configure upload folder
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
