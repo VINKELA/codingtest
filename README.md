@@ -20,10 +20,11 @@ https://vggcodingtest.herokuapp.com/
 ## Git Link
 https://github.com/VINKELA/codingtest.git
 
-## Endpoin
+## Endpoints
 https://vggcodingtest.herokuapp.com/users/register
 
 https://vggcodingtest.herokuapp.com/users/auth
+
 https://vggcodingtest.herokuapp.com/projects
 
 https://vggcodingtest.herokuapp.com/projects
