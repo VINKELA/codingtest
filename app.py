@@ -279,7 +279,9 @@ class Upload_files(Resource):
             abort(404, message="No file selected for uploading")
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            '''Heroku is empherial meaning files cannot be uploaded to it else
+            The line below would have saved to upload folder'''
+            #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             project = Projects.query.filter_by(id=project_id).first()
             project.user_stories = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             db.session.add(project)
