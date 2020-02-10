@@ -1,7 +1,6 @@
 from model import app, Projects, Actions
 from itsdangerous import URLSafeTimedSerializer
 from flask_restful import abort
-from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 

@@ -8,6 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask_restful import reqparse, abort, Api, Resource
 from flask_restful import fields, marshal_with
 from sqlalchemy import and_
+from werkzeug.utils import secure_filename
 
 
 api = Api(app)
@@ -53,11 +54,11 @@ class Create_user(Resource):
         username = args['name']
         password = args['password']
         if not  username:
-            abort(404, message="please choose a username")
+            abort(404, message="please choose a name")
         new_user = username.lower()
         current = Users.query.filter_by(name=new_user).first()
         if current:
-            abort(404, message="{} already exist. please choose another username".format(new_user))
+            abort(404, message="{} already exist. please choose another name".format(new_user))
         if not password:
             abort(404, message = "please choose a password")
         if len(password) < 6:
@@ -83,9 +84,9 @@ class Auth(Resource):
             abort(404, message = "please provide your password")
         user = Users.query.filter_by(name=username).first()
         if not user:
-            abort(404, message = "username or password incorrect")
+            abort(404, message = "name or password incorrect")
         if not check_password_hash(user.password, password):
-            abort(404, message ="username or password incorrect")
+            abort(404, message ="name or password incorrect")
         token = generate_confirmation_token(user.name)
         return jsonify({'token':"{}".format(token), 'status_code': 200})
 
