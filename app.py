@@ -280,7 +280,7 @@ class Upload_files(Resource):
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             #path to file
-            path = app.config['UPLOAD_FOLDER'] +'\\' + filename
+            path = app.config['UPLOAD_FOLDER'] +'/' + filename
             file.save(path)
             project = Projects.query.filter_by(id=project_id).first()
             project.user_stories = path
