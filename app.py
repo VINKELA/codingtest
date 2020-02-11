@@ -168,13 +168,10 @@ class Project_crud(Resource):
     #update the completed property of project with given project_id
     def patch(self, project_id):
         abort_if_project_doesnt_exist(project_id)
-        args = parser.parse_args()
-        completed = args['completed']
         project = Projects.query.filter_by(id=project_id).first()
-        if not completed:
-            project.completed =  False
-        else:
-            project.completed = True
+        if project.completed:
+            abort(404, message = "completed already updated")
+        project.completed = True
         db.session.add(project)
         db.session.commit()
         return jsonify({'message': 'changes made successfully', 'status_code':'201'})
