@@ -32,6 +32,7 @@ parser.add_argument('note')
 parser.add_argument('search')
 parser.add_argument('limit')
 parser.add_argument('offset')
+parser.add_argument('completed')
 
 #fields
 project_fields = {
@@ -168,13 +169,22 @@ class Project_crud(Resource):
     #update the completed property of project with given project_id
     def patch(self, project_id):
         abort_if_project_doesnt_exist(project_id)
+        args = parser.parse_args()
+        completed = args['completed']
+        if not completed:
+            abort(404, message = "please set argument \'completed\' to true or false")
+        completed = completed.lower()
+        if completed != 'true' and completed != 'false':
+            abort(404, message = "argument completed must be true or false")
         project = Projects.query.filter_by(id=project_id).first()
-        if project.completed:
-            abort(404, message = "completed already updated")
-        project.completed = True
+        if completed == 'true':
+            project.completed = True
+        else:
+            project.completed = False
         db.session.add(project)
         db.session.commit()
         return jsonify({'message': 'changes made successfully', 'status_code':'201'})
+    
     # delete project with given id 
     def delete(self, project_id):
         abort_if_project_doesnt_exist(project_id)
