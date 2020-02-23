@@ -19,7 +19,7 @@ https://vggcodingtest.herokuapp.com/
 
 Get https://vggcodingtest.herokuapp.com/projects retrieve all projects
 
-Post https://vggcodingtest.herokuapp.com/projects/  you have to provide a unique name and a description parameter eg https://vggcodingtest.herokuapp.com/projects args name=project5&&description=mydescription
+Post https://vggcodingtest.herokuapp.com/projects/  you have to provide a unique name and a description parameter eg https://vggcodingtest.herokuapp.com/projects args name=project5 description=mydescription
 
 Get https://vggcodingtest.herokuapp.com/<projectid> eg  https://vggcodingtest.herokuapp.com/projects/1 gets a project with id 1
 
@@ -31,7 +31,7 @@ Patch https://vggcodingtest.herokuapp.com/<projectid> eg  https://vggcodingtest.
 
 Delete  https://vggcodingtest.herokuapp.com/<projectid> eg  https://vggcodingtest.herokuapp.com/projects/1 deletes a project with given id
 
-post https://vggcodingtest.herokuapp.com/projects/1/actions  creates an action belonging to project with id 1. takes argument note and description 
+post https://vggcodingtest.herokuapp.com/projects/1/actions  creates an action belonging to project with id 1. takes argument note=note1 and description=firstnote 
 
 
 get https://vggcodingtest.herokuapp.com/actions Retrieves all actions
